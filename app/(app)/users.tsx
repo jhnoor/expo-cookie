@@ -41,7 +41,7 @@ export default function Users() {
     return (
       <>
         <Text>Error</Text>
-        {error && <p>{JSON.stringify(error.error)}</p>}
+        {<p>{JSON.stringify(error.error)}</p>}
       </>
     );
   }

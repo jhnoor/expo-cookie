@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     status: 302,
     headers: {
       Location: "/",
-      "Set-Cookie": `bff_token=${data.access_token}; Path=/`,
+      "Set-Cookie": `bff_token=${data.access_token}; Path=/; HttpOnly`,
     },
   });
 }
