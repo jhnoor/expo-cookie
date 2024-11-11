@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 app.get("/api/users", (req, res) => {
   if (!req.headers.authorization) {
     res.status(401).send("Unauthorized");
+    console.error("Unauthorized");
   } else {
     res.status(200).send([
       { id: 1, name: "John Doe" },
