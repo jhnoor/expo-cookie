@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 
 app.get("/api/users", (req, res) => {
   if (!req.headers.authorization) {
-    res.status(401).send("Unauthorized");
+    res.status(401).send({ error: "Unauthorized" });
     console.error("Unauthorized");
   } else {
     res.status(200).send([

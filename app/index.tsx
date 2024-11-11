@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
+import { Redirect } from "expo-router";
 
 export default function RootLayout() {
-  const [text, setText] = useState("Loading...");
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch("hello").then((response) => {
+    fetch("api/login").then((response) => {
       if (response.ok) {
-        response.json().then((json) => {
-          setText(json.message);
+        response.json().then(() => {
+          setTimeout(() => {
+            setLoggedIn(true);
+          }, 1000); // simulate loading
         });
       } else {
-        setText("Error: " + response.status);
+        setLoggedIn(false);
       }
     });
   }, []);
 
-  return <Text>{text}</Text>;
+  if (loggedIn === null) {
+    return <Text>Loading...</Text>;
+  } else if (loggedIn) {
+    return <Redirect href={"/users"} />;
+  } else {
+    return <Text>Unauthorized</Text>;
+  }
 }
