@@ -1,15 +1,19 @@
+import { getBFFTokenFromCookie } from "@/utils/helpers";
+
 export async function GET(request: Request) {
   try {
     const cookie = request.headers.get("cookie");
-    if (!cookie?.includes("om=nom")) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const token = getBFFTokenFromCookie(cookie);
+
+    if (!token) {
+      console.error("No cookie found!");
+      return Response.json(null, { status: 401 });
     }
 
     const response = await fetch("http://localhost:3000/api/users", {
       method: "GET",
       headers: {
-        authorization: "foo",
-        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
       },
     });
 

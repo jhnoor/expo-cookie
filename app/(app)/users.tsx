@@ -16,7 +16,7 @@ export default function Users() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("api/users", { credentials: "include" }).then((response) => {
+    fetch("bff/users", { credentials: "include" }).then((response) => {
       if (response.ok) {
         response.json().then((users: User[]) => {
           setUsers(users);

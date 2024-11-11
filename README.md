@@ -23,3 +23,9 @@
    ```
 
 ![BFF Diagram](docs/bff.png)
+
+## TODO
+
+- [x] Show example of entire oauth2 auth code flow with BFF
+- [ ] SecureStore example for app
+- [ ] when on web, intercept all api calls to API via BFF so that it can add access_token

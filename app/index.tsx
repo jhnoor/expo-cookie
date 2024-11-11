@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
+
+const authServer = "http://localhost:4000";
+const redirectUri = "http://localhost:8081/bff/continue";
+const authLoginPage = `${authServer}/login?redirect_uri=${redirectUri}&client_id=client123`;
 
 export default function RootLayout() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    fetch("api/login").then((response) => {
+    fetch("bff/me", { credentials: "include" }).then((response) => {
       if (response.ok) {
         response.json().then(() => {
-          setTimeout(() => {
-            setLoggedIn(true);
-          }, 1000); // simulate loading
+          setLoggedIn(true);
         });
       } else {
         setLoggedIn(false);
@@ -21,8 +24,10 @@ export default function RootLayout() {
 
   if (loggedIn === null) {
     return <Text>Loading...</Text>;
-  } else if (loggedIn) {
+  } else if (loggedIn === true) {
     return <Redirect href={"/users"} />;
+  } else if (loggedIn === false) {
+    router.push(authLoginPage);
   } else {
     return <Text>Unauthorized</Text>;
   }
