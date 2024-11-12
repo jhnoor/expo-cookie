@@ -6,7 +6,6 @@ import {
   Button,
   StyleSheet,
   FlatList,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -51,10 +50,6 @@ export default function Users() {
   }, [error]);
 
   const addUser = () => {
-    if (newUserName.trim() === "") {
-      Alert.alert("Error", "Please enter a name");
-      return;
-    }
     fetch("api/users", {
       method: "POST",
       credentials: "include",
@@ -71,7 +66,7 @@ export default function Users() {
           return null;
         } else {
           return response.json().then((error) => {
-            throw new Error(error.message || "Failed to add user");
+            setError({ error, status: response.status });
           });
         }
       })
@@ -80,10 +75,27 @@ export default function Users() {
           setUsers((prevUsers) => [...(prevUsers || []), user]);
           setNewUserName("");
         }
-      })
-      .catch((error) => {
-        Alert.alert("Error", error.message);
       });
+  };
+
+  const deleteUser = (id: number) => {
+    fetch(`api/users/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    }).then((response) => {
+      if (response.ok) {
+        // Remove user from state
+        setUsers((prevUsers) =>
+          prevUsers ? prevUsers.filter((user) => user.id !== id) : null
+        );
+      } else if (response.status === 401) {
+        router.push("/");
+      } else {
+        return response.json().then((error) => {
+          throw new Error(error.message || "Failed to delete user");
+        });
+      }
+    });
   };
 
   if (error) {
@@ -124,7 +136,14 @@ export default function Users() {
         data={users}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <Text style={styles.userItem}>{item.name}</Text>
+          <View style={styles.userItem}>
+            <Text style={styles.userName}>{item.name}</Text>
+            <Button
+              title="Delete"
+              color="#f22"
+              onPress={() => deleteUser(item.id)}
+            />
+          </View>
         )}
       />
     </View>
@@ -160,7 +179,12 @@ const styles = StyleSheet.create({
     height: 40,
   },
   userItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  userName: {
+    flex: 1,
     fontSize: 18,
-    paddingVertical: 5,
   },
 });
