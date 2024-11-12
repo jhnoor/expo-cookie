@@ -11,7 +11,7 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("bff/me", { credentials: "include" }).then((response) => {
+    fetch("api/me", { credentials: "include" }).then((response) => {
       if (response.ok) {
         response.json().then(() => {
           setState(states.IS_LOGGED_IN);
