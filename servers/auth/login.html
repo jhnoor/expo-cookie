@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Viewport meta tag for mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+      /* Basic reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 24px; /* Ensure h2 is appropriately sized */
+      }
+
+      form {
+        max-width: 400px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 16px; /* Set label font size to 16px */
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px; /* Ensure input font size is at least 16px */
+      }
+
+      button {
+        width: 100%;
+        padding: 15px;
+        background-color: #28a745;
+        border: none;
+        color: #fff;
+        font-size: 18px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 500px) {
+        body {
+          padding: 10px;
+        }
+
+        form {
+          padding: 20px;
+        }
+
+        h2 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Login</h2>
+    <form method="post" action="/login">
+      <input type="hidden" name="client_id" id="client_id" />
+      <input type="hidden" name="redirect_uri" id="redirect_uri" />
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password" required />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+
+    <script>
+      // Populate hidden inputs with query parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      document.getElementById("client_id").value =
+        urlParams.get("client_id") || "";
+      document.getElementById("redirect_uri").value =
+        urlParams.get("redirect_uri") || "";
+    </script>
+  </body>
+</html>

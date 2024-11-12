@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "api": "yarn build && node dist/api.js",
-    "auth": "yarn build && node dist/auth.js",
-    "build": "tsc"
+    "api": "yarn build && node dist/api/api.js",
+    "auth": "yarn build && yarn copy-auth-files && node dist/auth/auth.js",
+    "build": "tsc",
+    "copy-auth-files": "cp auth/*.html dist/auth"
   },
   "dependencies": {
     "express": "^5"

@@ -2,7 +2,8 @@
 import express from "express";
 import bodyParser from "body-parser";
 import querystring from "querystring";
-import { AuthorizationCode, AccessToken } from "./models";
+import path from "path";
+import { AuthorizationCode, AccessToken } from "../models";
 
 const app = express();
 const port = 4000;
@@ -27,23 +28,7 @@ const accessTokens: { [token: string]: AccessToken } = {}; // Map tokens to user
 // Render login page
 app.get("/login", (req, res) => {
   console.log("/login", req.query);
-  // Render a simple login form
-  res.send(`
-    <h2>Login</h2>
-    <form method="post" action="/login">
-      <input type="hidden" name="client_id" value="${req.query.client_id}">
-      <input type="hidden" name="redirect_uri" value="${req.query.redirect_uri}">
-      <div>
-        <label>Username:</label>
-        <input type="text" name="username"/>
-      </div>
-      <div>
-        <label>Password:</label>
-        <input type="password" name="password"/>
-      </div>
-      <button type="submit">Login</button>
-    </form>
-  `);
+  res.sendFile(path.join(__dirname, "login.html"));
 });
 
 app.post("/login", (req, res) => {
