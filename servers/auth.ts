@@ -48,6 +48,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const { username, password, client_id, redirect_uri } = req.body;
+  console.log("/login", req.body);
 
   // Validate client
   const client = clients.find((c) => c.clientId === client_id);
@@ -166,6 +167,18 @@ app.get("/me", (req, res) => {
     res.json({ id: user.id, username: user.username });
   } else {
     console.error("Invalid access token");
+    res.status(401).send("Invalid access token");
+  }
+});
+
+app.post("/introspect", (req, res) => {
+  const { token } = req.body;
+  console.log("/introspect", req.body);
+
+  const tokenData = accessTokens[token];
+  if (tokenData) {
+    res.status(200).send();
+  } else {
     res.status(401).send("Invalid access token");
   }
 });
