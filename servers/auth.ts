@@ -10,7 +10,7 @@ const port = 4000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const users = [{ id: 1, username: "user", password: "pass" }];
+const users = [{ id: 1, username: "foo", password: "bar" }];
 
 const clients = [
   {

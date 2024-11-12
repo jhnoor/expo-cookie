@@ -38,9 +38,12 @@ export default function Users() {
   }, [error]);
 
   if (error) {
+    setTimeout(() => {
+      router.push("/");
+    }, 2000);
     return (
       <>
-        <Text>Error</Text>
+        <Text>Error, redirecting to home</Text>
         {<p>{JSON.stringify(error.error)}</p>}
       </>
     );
