@@ -7,6 +7,7 @@ import { getBFFTokenFromCookie } from "@/utils/helpers";
 
 // Common handler function
 async function handleRequest(request: Request) {
+  console.log(`${request.method} request to ${request.url}`);
   const url = new URL(request.url);
 
   // Extract the path after /api to append to the new URL

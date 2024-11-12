@@ -1,33 +1,46 @@
 import { useEffect, useState } from "react";
-import { Text } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  FlatList,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 
-interface User {
+type User = {
   id: number;
   name: string;
-}
+};
 
 export default function Users() {
   const [users, setUsers] = useState<User[] | null>(null);
   const [error, setError] = useState<{ error: string; status: number } | null>(
     null
   );
-
+  const [newUserName, setNewUserName] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    fetch("api/users", { credentials: "include" }).then((response) => {
-      if (response.ok) {
-        response.json().then((users: User[]) => {
-          setUsers(users);
-        });
-      } else {
-        response.json().then((error) => {
-          setError({ error, status: response.status });
-          setUsers([]);
-        });
-      }
-    });
+    fetch("api/users", { credentials: "include" })
+      .then((response) => {
+        if (response.ok) {
+          response.json().then((users: User[]) => {
+            setUsers(users);
+          });
+        } else {
+          response.json().then((error) => {
+            setError({ error, status: response.status });
+            setUsers([]);
+          });
+        }
+      })
+      .catch((error) => {
+        setError({ error: error.message, status: 500 });
+      });
   }, []);
 
   useEffect(() => {
@@ -37,6 +50,42 @@ export default function Users() {
     }
   }, [error]);
 
+  const addUser = () => {
+    if (newUserName.trim() === "") {
+      Alert.alert("Error", "Please enter a name");
+      return;
+    }
+    fetch("api/users", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newUserName }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else if (response.status === 401) {
+          router.push("/");
+          return null;
+        } else {
+          return response.json().then((error) => {
+            throw new Error(error.message || "Failed to add user");
+          });
+        }
+      })
+      .then((user) => {
+        if (user) {
+          setUsers((prevUsers) => [...(prevUsers || []), user]);
+          setNewUserName("");
+        }
+      })
+      .catch((error) => {
+        Alert.alert("Error", error.message);
+      });
+  };
+
   if (error) {
     setTimeout(() => {
       router.push("/");
@@ -44,22 +93,74 @@ export default function Users() {
     return (
       <>
         <Text>Error, redirecting to home</Text>
-        {<p>{JSON.stringify(error.error)}</p>}
+        <Text>{JSON.stringify(error.error)}</Text>
       </>
     );
   }
 
   if (users === null) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
   }
 
   return (
-    <>
-      <Text style={{ marginBottom: 10 }}>Users</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Users</Text>
 
-      {users.map((user) => (
-        <Text key={user.id}>{user.name}</Text>
-      ))}
-    </>
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter new user name"
+          value={newUserName}
+          onChangeText={setNewUserName}
+        />
+        <Button title="Add User" onPress={addUser} />
+      </View>
+
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <Text style={styles.userItem}>{item.name}</Text>
+        )}
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  form: {
+    flexDirection: "row",
+    marginBottom: 20,
+  },
+  input: {
+    flex: 1,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    marginRight: 10,
+    paddingHorizontal: 10,
+    height: 40,
+  },
+  userItem: {
+    fontSize: 18,
+    paddingVertical: 5,
+  },
+});

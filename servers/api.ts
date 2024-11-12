@@ -24,12 +24,12 @@ app.get("/api/users", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/api/user", async (req: Request, res: Response) => {
+app.post("/api/users", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("POST /api/user", token);
+  console.log("POST /api/users", token);
 
   if (token && (await isTokenValid(token))) {
-    const user = req.body;
+    const user = { ...req.body, id: users.length + 1 };
     users.push(user);
     res.status(200).send(user);
   } else {
@@ -38,9 +38,9 @@ app.post("/api/user", async (req: Request, res: Response) => {
   }
 });
 
-app.delete("/api/user/:id", async (req: Request, res: Response) => {
+app.delete("/api/users/:id", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("DELETE /api/user/:id", token);
+  console.log("DELETE /api/users/:id", token);
 
   if (token && (await isTokenValid(token))) {
     const id = parseInt(req.params.id);
@@ -58,9 +58,9 @@ app.delete("/api/user/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.put("/api/user/:id", async (req: Request, res: Response) => {
+app.put("/api/users/:id", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("PUT /api/user/:id", token);
+  console.log("PUT /api/users/:id", token);
 
   if (token && (await isTokenValid(token))) {
     const id = parseInt(req.params.id);
