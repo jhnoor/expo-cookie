@@ -15,6 +15,7 @@ export type AuthorizationCode = {
 };
 export type AccessToken = {
   userId: number;
+  expires: Date;
 };
 
 export type TokenResponse = {

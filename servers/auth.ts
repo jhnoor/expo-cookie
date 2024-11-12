@@ -127,7 +127,10 @@ app.post("/token", (req, res) => {
     if (authCode && authCode.clientId === client_id) {
       // Generate access token
       const accessToken = Math.random().toString(36).substring(2, 15);
-      accessTokens[accessToken] = { userId: authCode.userId };
+      accessTokens[accessToken] = {
+        userId: authCode.userId,
+        expires: new Date(Date.now() + 60000), // 1 minute
+      };
 
       // Remove used authorization code
       delete authorizationCodes[code];
@@ -137,7 +140,7 @@ app.post("/token", (req, res) => {
       res.json({
         access_token: accessToken,
         token_type: "Bearer",
-        expires_in: 3600,
+        expires_in: accessTokens[accessToken].expires.getTime() - Date.now(),
       });
     } else {
       console.error("Invalid authorization code");
@@ -177,7 +180,17 @@ app.post("/introspect", (req, res) => {
 
   const tokenData = accessTokens[token];
   if (tokenData) {
-    res.status(200).send();
+    if (tokenData.expires < new Date()) {
+      console.error("Token expired");
+      delete accessTokens[token];
+      res.status(401).send("Token expired");
+    } else {
+      const expiresIn = Math.round(
+        (tokenData.expires.getTime() - Date.now()) / 1000
+      );
+      console.log(`Token is valid for ${expiresIn} more seconds`);
+      res.status(200).send();
+    }
   } else {
     res.status(401).send("Invalid access token");
   }
