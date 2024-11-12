@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { BASE_URL } from "@/constants/paths";
 
 type User = {
   id: number;
@@ -24,7 +25,7 @@ export default function Users() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("api/users", { credentials: "include" })
+    fetch(`${BASE_URL}/api/users`, { credentials: "include" })
       .then((response) => {
         if (response.ok) {
           response.json().then((users: User[]) => {
@@ -50,7 +51,7 @@ export default function Users() {
   }, [error]);
 
   const addUser = () => {
-    fetch("api/users", {
+    fetch(`${BASE_URL}/api/users`, {
       method: "POST",
       credentials: "include",
       headers: {
