@@ -23,7 +23,6 @@ export async function GET(request: Request) {
     body: JSON.stringify({
       code,
       grant_type: "authorization_code",
-      redirect_uri: redirectUri,
       client_id: clientId,
       client_secret: clientSecret,
     }),
