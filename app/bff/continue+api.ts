@@ -1,13 +1,14 @@
 import { AUTH_SERVER } from "@/constants/paths";
 import { TokenResponse } from "@/servers/models";
 
-// continue the login flow
-const redirectUri = "http://localhost:8081/bff/continue";
-
 const clientSecret = "secret123";
 const clientId = "client123";
 
+// 2. Continue the auth flow
+// This is the endpoint that the auth server redirects to after the user logs in
+// It will exchange the code for a token and redirect back to the app
 export async function GET(request: Request) {
+  // Auth has redirected to AuthBFF with a code
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
 
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
     console.error("No code found in the URL: " + url);
   }
 
+  // 3. Exchange code for access token
   const response = await fetch(`${AUTH_SERVER}/token`, {
     method: "POST",
     headers: {
@@ -38,16 +40,16 @@ export async function GET(request: Request) {
     });
   }
 
-  console.log("Got the token, redirecting to the app");
-
   const data: TokenResponse = await response.json();
 
-  console.log("Token data", data);
+  console.log("AuthBFF has successfully exchanged code for access token", data);
 
   return new Response(null, {
     status: 302,
     headers: {
       Location: "/",
+      // 4. Bake the access token into a httpOnly cookie
+      // Note: This is a simple example, in a real app you would store the token with the secure flag, and ensure it is only sent over HTTPS
       "Set-Cookie": `bff_token=${data.access_token}; Path=/; HttpOnly`,
     },
   });

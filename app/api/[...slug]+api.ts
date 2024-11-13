@@ -1,6 +1,7 @@
 import { API_SERVER } from "@/constants/paths";
 import { getBFFTokenFromCookie } from "@/utils/helpers";
 
+// 5.2. The AuthBFF forwards the request to the API server
 // This file is a catch-all for all API requests that are headed towards the backend server
 // It forwards the request - after adding the access token - to the API server and returns the response to the client
 // The filepath api/[..slug]+api.ts is special and tells Expo to match all paths that start with /api

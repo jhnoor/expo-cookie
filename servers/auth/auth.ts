@@ -25,7 +25,9 @@ const clients = [
 const authorizationCodes: { [code: string]: AuthorizationCode } = {}; // Map codes to clientId and userId
 const accessTokens: { [token: string]: AccessToken } = {}; // Map tokens to userId
 
-// Render login page
+// 1. The auth flow starts here, as the user is navigated to the login page
+// It is the responsibility of the client to send the user here. The client should
+// include the client_id and redirect_uri in the query string
 app.get("/login", (req, res) => {
   console.log("/login", req.query);
   res.sendFile(path.join(__dirname, "login.html"));

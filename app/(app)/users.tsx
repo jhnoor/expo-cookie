@@ -25,6 +25,7 @@ export default function Users() {
   const router = useRouter();
 
   useEffect(() => {
+    // 5.1 Client makes a request via the AuthBFF, ensuring that cookies are sent
     fetch(`${BASE_URL}/api/users`, { credentials: "include" })
       .then((response) => {
         if (response.ok) {
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     paddingHorizontal: 10,
     height: 40,
+    fontSize: 16,
   },
   userItem: {
     flexDirection: "row",
