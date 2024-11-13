@@ -1,4 +1,4 @@
-import { AUTH_SERVER } from "@/constants/paths";
+import { AUTH_SERVER } from "@/lib/constants";
 import { TokenResponse } from "@/servers/models";
 
 const clientSecret = "secret123";

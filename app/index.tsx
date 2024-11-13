@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { useRouter } from "expo-router";
-import { BASE_URL } from "@/constants/paths";
+import { BASE_URL } from "@/lib/constants";
 
 const authServer = "http://localhost:4000";
 const redirectUri = `${BASE_URL}/bff/continue`;

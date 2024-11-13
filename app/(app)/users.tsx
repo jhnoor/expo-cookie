@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { BASE_URL } from "@/constants/paths";
+import { BASE_URL } from "@/lib/constants";
 
 type User = {
   id: number;

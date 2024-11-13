@@ -1,4 +1,4 @@
-import { API_SERVER } from "@/constants/paths";
+import { API_SERVER } from "@/lib/constants";
 import { getBFFTokenFromCookie } from "@/utils/helpers";
 
 // 5.2. The AuthBFF forwards the request to the API server
