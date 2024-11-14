@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { useRouter } from "expo-router";
-import { BASE_URL } from "@/lib/constants";
+import apiClient from "@/lib/api-client";
+import { API_URL } from "@/lib/constants";
 
 export default function RootLayout() {
   const [state, setState] = useState<states>(states.INIT);
@@ -9,17 +10,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     const getLoginState = async () => {
-      fetch(`${BASE_URL}/api/me`, { credentials: "include" }).then(
-        (response) => {
-          if (response.ok) {
-            response.json().then(() => {
-              setState(states.IS_LOGGED_IN);
-            });
-          } else {
-            setState(states.IS_NOT_LOGGED_IN);
-          }
-        }
-      );
+      try {
+        await apiClient.get(`${API_URL}/me`);
+        setState(states.IS_LOGGED_IN);
+      } catch (error) {
+        console.log(error);
+        setState(states.IS_NOT_LOGGED_IN);
+      }
     };
 
     getLoginState();

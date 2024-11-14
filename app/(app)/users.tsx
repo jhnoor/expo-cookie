@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { BASE_URL } from "@/lib/constants";
+import { API_URL } from "@/lib/constants";
+import apiClient from "@/lib/api-client";
 
 type User = {
   id: number;
@@ -26,17 +27,11 @@ export default function Users() {
 
   useEffect(() => {
     // 5.1 Client makes a request via the AuthBFF, ensuring that cookies are sent
-    fetch(`${BASE_URL}/api/users`, { credentials: "include" })
+    apiClient
+      .get<User[]>(`${API_URL}/users`)
       .then((response) => {
-        if (response.ok) {
-          response.json().then((users: User[]) => {
-            setUsers(users);
-          });
-        } else {
-          response.json().then((error) => {
-            setError({ error, status: response.status });
-            setUsers([]);
-          });
+        if (response.data) {
+          setUsers(response.data);
         }
       })
       .catch((error) => {
@@ -52,54 +47,37 @@ export default function Users() {
   }, [error]);
 
   const addUser = () => {
-    fetch(`${BASE_URL}/api/users`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: newUserName }),
-    })
+    apiClient
+      .post<User>(`${API_URL}/users`, { name: newUserName })
       .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else if (response.status === 401) {
-          router.push("/");
-          return null;
-        } else {
-          return response.json().then((error) => {
-            setError({ error, status: response.status });
-          });
-        }
+        setUsers((prevUsers) => [...(prevUsers || []), response.data]);
+        setNewUserName("");
       })
-      .then((user) => {
-        if (user) {
-          setUsers((prevUsers) => [...(prevUsers || []), user]);
-          setNewUserName("");
-        }
+      .catch((error) => {
+        console.error("Failed to add user", error);
+        setError({ error: error.message, status: error.response?.status });
       });
   };
 
   const deleteUser = (id: number) => {
-    fetch(`api/users/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    }).then((response) => {
-      if (response.ok) {
-        // Remove user from state
+    apiClient
+      .delete(`${API_URL}/users/${id}`)
+      .then(() => {
         setUsers((prevUsers) =>
           prevUsers ? prevUsers.filter((user) => user.id !== id) : null
         );
-      } else if (response.status === 401) {
+      })
+      .catch((error) => {
+        console.error("Failed to delete user", error);
         router.push("/");
-      } else {
-        return response.json().then((error) => {
-          throw new Error(error.message || "Failed to delete user");
-        });
-      }
-    });
+      });
   };
 
+  // TODO handle 401
+  // first of all it shouldn't happen for web, the BFF should refresh the token
+  // but let's say refresh token has also expired
+  // in that case, we should redirect to login
+  // whereas for app, it should handle the refresh of the token, and we should do this in the axios interceptor
   if (error) {
     setTimeout(() => {
       router.push("/");
