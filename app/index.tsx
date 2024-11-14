@@ -3,10 +3,6 @@ import { Text } from "react-native";
 import { useRouter } from "expo-router";
 import { BASE_URL } from "@/lib/constants";
 
-const authServer = "http://localhost:4000";
-const redirectUri = `${BASE_URL}/bff/continue`;
-const authLoginPage = `${authServer}/login?redirect_uri=${redirectUri}&client_id=client123`;
-
 export default function RootLayout() {
   const [state, setState] = useState<states>(states.INIT);
   const router = useRouter();
@@ -33,8 +29,9 @@ export default function RootLayout() {
       return <Text>You are already logged in. Redirecting to /users...</Text>;
     case states.IS_NOT_LOGGED_IN:
       setTimeout(() => {
-        router.push(authLoginPage);
+        router.push("/continue");
       }, 2000);
+
       return (
         <Text>
           You aren't logged in, redirecting to http://localhost:4000/login

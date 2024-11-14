@@ -1,4 +1,3 @@
-// Simple OAuth2 Authorization Server using Express.js
 import express from "express";
 import bodyParser from "body-parser";
 import querystring from "querystring";
@@ -11,14 +10,20 @@ const port = 4000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// This is a simple example, in a real app you would store users and clients in a database
 const users = [{ id: 1, username: "foo", password: "bar" }];
-
 const clients = [
   {
-    clientId: "client123",
-    clientSecret: "secret123",
+    // Web client. Note that we redirect to the server-side BFF, in order to securely exchange the code for a token and set a cookie
+    clientId: "myWebClient",
     redirectUris: ["http://localhost:8081/bff/continue"],
     grants: ["authorization_code"],
+  },
+  {
+    // Native client. The app can securely store the access and refresh tokens using the platform's secure storage, so we redirect to the app's own continue page
+    clientId: "myNativeClient",
+    redirectUris: ["expocookie://continue"],
+    grants: ["authorization_code", "refresh_token"],
   },
 ];
 
@@ -97,12 +102,10 @@ app.get("/authorize", (req, res) => {
 // Token endpoint
 app.post("/token", (req, res) => {
   console.log("/token", req.body);
-  const { grant_type, code, client_id, client_secret } = req.body;
+  const { grant_type, code, client_id } = req.body;
 
   // Validate client
-  const client = clients.find(
-    (c) => c.clientId === client_id && c.clientSecret === client_secret
-  );
+  const client = clients.find((c) => c.clientId === client_id);
   if (!client) {
     console.error("Invalid client credentials: " + client_id);
     res.status(401).send("Invalid client credentials");
@@ -139,6 +142,7 @@ app.post("/token", (req, res) => {
   }
 });
 
+// TODO remove this endpoint, only complicates the example
 app.get("/me", (req, res) => {
   console.log("/me", req.headers);
 

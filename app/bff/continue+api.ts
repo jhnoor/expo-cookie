@@ -1,8 +1,13 @@
-import { AUTH_SERVER } from "@/lib/constants";
-import { TokenResponse } from "@/servers/models";
+// We can't securely store tokens on the device in the web client, so we need to exchange the code for a token on the server-side BFF.
+// This is the endpoint that the auth server redirects to after the user logs in on the web client.
+// It will exchange the code for a token and redirect back to the app with a httpOnly cookie containing the token.
+// This is a simple example, in a real app you would store the token with the secure flag, and ensure it is only sent over HTTPS.
 
-const clientSecret = "secret123";
-const clientId = "client123";
+import { AUTH_SERVER, WEB_CLIENT_ID } from "@/lib/constants";
+import { TokenResponse } from "@/servers/models";
+import * as WebBrowser from "expo-web-browser";
+
+WebBrowser.maybeCompleteAuthSession();
 
 // 2. Continue the auth flow
 // This is the endpoint that the auth server redirects to after the user logs in
@@ -25,8 +30,7 @@ export async function GET(request: Request) {
     body: JSON.stringify({
       code,
       grant_type: "authorization_code",
-      client_id: clientId,
-      client_secret: clientSecret,
+      client_id: WEB_CLIENT_ID,
     }),
   });
 
@@ -47,7 +51,7 @@ export async function GET(request: Request) {
   return new Response(null, {
     status: 302,
     headers: {
-      Location: "/",
+      Location: "/", // TODO use state to redirect to the original page instead of the home page
       // 4. Bake the access token into a httpOnly cookie
       // Note: This is a simple example, in a real app you would store the token with the secure flag, and ensure it is only sent over HTTPS
       "Set-Cookie": `bff_token=${data.access_token}; Path=/; HttpOnly`,

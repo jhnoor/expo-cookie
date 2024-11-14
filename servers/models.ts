@@ -5,7 +5,6 @@ export type User = {
 };
 export type Client = {
   clientId: string;
-  clientSecret: string;
   redirectUris: string[];
   grants: string[];
 };
