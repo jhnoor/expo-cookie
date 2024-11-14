@@ -4,7 +4,7 @@
 // This is a simple example, in a real app you would store the token with the secure flag, and ensure it is only sent over HTTPS.
 
 import { AUTH_SERVER, WEB_CLIENT_ID } from "@/lib/constants";
-import { TokenResponse } from "@/servers/models";
+import { AuthResponse } from "@/servers/models";
 import * as WebBrowser from "expo-web-browser";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const data: TokenResponse = await response.json();
+  const data: AuthResponse = await response.json();
 
   console.log("AuthBFF has successfully exchanged code for access token", data);
 
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       Location: "/", // TODO use state to redirect to the original page instead of the home page
       // 4. Bake the access token into a httpOnly cookie
       // Note: This is a simple example, in a real app you would store the token with the secure flag, and ensure it is only sent over HTTPS
-      "Set-Cookie": `bff_token=${data.access_token}; Path=/; HttpOnly`,
+      "Set-Cookie": `bff_token=${data.access_token.token}; Path=/; HttpOnly`,
     },
   });
 }

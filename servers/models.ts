@@ -3,22 +3,30 @@ export type User = {
   username: string;
   password: string;
 };
+
 export type Client = {
   clientId: string;
   redirectUris: string[];
   grants: string[];
 };
+
 export type AuthorizationCode = {
   clientId: string;
   userId: number;
 };
-export type AccessToken = {
+
+export type Token = {
   userId: number;
   expires: Date;
+  type: "access" | "refresh";
 };
 
 export type TokenResponse = {
-  access_token: string;
-  token_type: string;
+  token: string;
   expires_in: number;
+};
+
+export type AuthResponse = {
+  access_token: TokenResponse;
+  refresh_token?: TokenResponse;
 };

@@ -3735,6 +3735,11 @@ expo-router@~4.0.2:
     semver "~7.6.3"
     server-only "^0.0.1"
 
+expo-secure-store@~14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/expo-secure-store/-/expo-secure-store-14.0.0.tgz#cf6eb7f73e619f8907d5a073e2f438927b5fc2ab"
+  integrity sha512-VyhtRFXP+7hQmHhKlHIOWid1Q/IRpM7Uif32tZHLZHvQ6FNz2cUkr26XWGvCa7btYbrR6OL++FBFZYjbIcRZTw==
+
 expo-system-ui@~4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/expo-system-ui/-/expo-system-ui-4.0.2.tgz#fd88642f1be636ff23c2c147fc23be89d995c7ae"

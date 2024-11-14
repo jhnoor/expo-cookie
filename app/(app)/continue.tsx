@@ -11,6 +11,10 @@ import {
   NATIVE_CLIENT_ID,
   WEB_CLIENT_ID,
 } from "@/lib/constants";
+import { useRouter } from "expo-router";
+import { AuthResponse } from "@/servers/models";
+import * as SecureStore from "expo-secure-store";
+import { useEffect } from "react";
 
 const authServer = "http://localhost:4000";
 const redirectUri = IS_WEB
@@ -20,50 +24,65 @@ const clientId = IS_WEB ? WEB_CLIENT_ID : NATIVE_CLIENT_ID;
 const authLoginPage = `${authServer}/login?redirect_uri=${redirectUri}&client_id=${clientId}`;
 
 export default function Continue() {
-  if (IS_WEB) {
-    // open url but not in new tab
-    // TODO would it be smoother for users to open in new tab?
-    window.location.href = authLoginPage;
-  } else {
-    setTimeout(async () => {
-      const result = await WebBrowser.openAuthSessionAsync(authLoginPage);
+  const router = useRouter();
 
-      if (result.type === "success" && result.url) {
-        // get the code from the URL
-        const code = new URL(result.url).searchParams.get("code");
-        if (!code) {
-          console.error("No code found in the URL: " + result.url);
-          return;
+  useEffect(() => {
+    if (IS_WEB) {
+      // open url but not in new tab
+      // TODO would it be smoother for users to open in new tab?
+      window.location.href = authLoginPage;
+    } else {
+      const login = async () => {
+        const result = await WebBrowser.openAuthSessionAsync(authLoginPage);
+
+        if (result.type === "cancel") {
+          console.error("User cancelled the login flow");
+          router.back();
         }
 
-        // exchange the code for an access token
-        const response = await fetch(`${authServer}/token`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code,
-            grant_type: "authorization_code",
-            client_id: clientId,
-          }),
-        });
+        if (result.type === "success" && result.url) {
+          // get the code from the URL
+          const code = new URL(result.url).searchParams.get("code");
+          if (!code) {
+            console.error("No code found in the URL: " + result.url);
+            return;
+          }
 
-        if (!response.ok) {
-          console.error("Failed to get token: " + response.statusText);
-          return;
+          // exchange the code for an access token
+          const response = await fetch(`${authServer}/token`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code,
+              grant_type: "authorization_code",
+              client_id: clientId,
+            }),
+          });
+
+          if (!response.ok) {
+            console.error("Failed to get token: " + response.statusText);
+            return;
+          }
+
+          const auth: AuthResponse = await response.json();
+
+          console.log("Successfully exchanged code for tokens", auth);
+          SecureStore.setItemAsync("auth", JSON.stringify(auth));
+
+          // redirect to /
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.push("/");
+          }
         }
+      };
 
-        const data = await response.json();
-        debugger;
-
-        console.log("Successfully exchanged code for access token", data);
-        // TODO store the access token securely on the device
-
-        // redirect to /
-      }
-    }, 2000);
-  }
+      login();
+    }
+  });
 
   return <Text>Continue</Text>;
 }

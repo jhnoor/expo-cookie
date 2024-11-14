@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import querystring from "querystring";
 import path from "path";
-import { AuthorizationCode, AccessToken } from "../models";
+import { AuthorizationCode, AuthResponse, Token } from "../models";
 
 const app = express();
 const port = 4000;
@@ -28,7 +28,7 @@ const clients = [
 ];
 
 const authorizationCodes: { [code: string]: AuthorizationCode } = {}; // Map codes to clientId and userId
-const accessTokens: { [token: string]: AccessToken } = {}; // Map tokens to userId
+const tokens: { [token: string]: Token } = {};
 
 // 1. The auth flow starts here, as the user is navigated to the login page
 // It is the responsibility of the client to send the user here. The client should
@@ -117,21 +117,49 @@ app.post("/token", (req, res) => {
     if (authCode && authCode.clientId === client_id) {
       // Generate access token
       const accessToken = Math.random().toString(36).substring(2, 15);
-      accessTokens[accessToken] = {
+      tokens[accessToken] = {
         userId: authCode.userId,
         expires: new Date(Date.now() + 60000), // 1 minute
+        type: "access",
       };
+
+      // Generate refresh token if grant type includes refresh token
+      const refreshToken = client.grants.includes("refresh_token")
+        ? Math.random().toString(36).substring(2, 15)
+        : null;
+
+      if (refreshToken) {
+        tokens[refreshToken] = {
+          userId: authCode.userId,
+          expires: new Date(Date.now() + 3600000), // 1 hour
+          type: "refresh",
+        };
+      }
 
       // Remove used authorization code
       delete authorizationCodes[code];
 
       // Respond with access token
+      const auth: AuthResponse = {
+        access_token: {
+          token: accessToken,
+          expires_in: tokens[accessToken].expires.getTime() - Date.now(),
+        },
+      };
+
+      if (refreshToken) {
+        auth.refresh_token = {
+          token: refreshToken,
+          expires_in: tokens[refreshToken].expires.getTime() - Date.now(),
+        };
+      }
+
       console.log(`Exchanging code ${code} for access_token ${accessToken}`);
-      res.json({
-        access_token: accessToken,
-        token_type: "Bearer",
-        expires_in: accessTokens[accessToken].expires.getTime() - Date.now(),
-      });
+      if (refreshToken) {
+        console.log(`You also received a refresh_token ${refreshToken}`);
+      }
+
+      res.json(auth);
     } else {
       console.error("Invalid authorization code");
       res.status(400).send("Invalid authorization code");
@@ -154,7 +182,7 @@ app.get("/me", (req, res) => {
   }
 
   const token = authHeader.split(" ")[1];
-  const tokenData = accessTokens[token];
+  const tokenData = tokens[token];
   const user = users.find((u) => u.id === tokenData.userId);
 
   if (tokenData && user) {
@@ -169,11 +197,11 @@ app.post("/introspect", (req, res) => {
   const { token } = req.body;
   console.log("/introspect", req.body);
 
-  const tokenData = accessTokens[token];
+  const tokenData = tokens[token];
   if (tokenData) {
     if (tokenData.expires < new Date()) {
       console.error("Token expired");
-      delete accessTokens[token];
+      delete tokens[token];
       res.status(401).send("Token expired");
     } else {
       const expiresIn = Math.round(

@@ -8,15 +8,21 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/me`, { credentials: "include" }).then((response) => {
-      if (response.ok) {
-        response.json().then(() => {
-          setState(states.IS_LOGGED_IN);
-        });
-      } else {
-        setState(states.IS_NOT_LOGGED_IN);
-      }
-    });
+    const getLoginState = async () => {
+      fetch(`${BASE_URL}/api/me`, { credentials: "include" }).then(
+        (response) => {
+          if (response.ok) {
+            response.json().then(() => {
+              setState(states.IS_LOGGED_IN);
+            });
+          } else {
+            setState(states.IS_NOT_LOGGED_IN);
+          }
+        }
+      );
+    };
+
+    getLoginState();
   }, []);
 
   switch (state) {
