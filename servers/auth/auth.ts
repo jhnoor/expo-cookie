@@ -10,6 +10,9 @@ const port = 4000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+const accessTokenExpiresInMs = 60 * 1000; // 1 minute
+const refreshTokenExpiresInMs = 60 * 10 * 1000; // 10 minutes
+
 // This is a simple example, in a real app you would store users and clients in a database
 const users = [{ id: 1, username: "foo", password: "bar" }];
 const clients = [
@@ -114,14 +117,9 @@ app.post("/token", (req, res) => {
 
   if (grant_type === "authorization_code") {
     const authCode = authorizationCodes[code];
-    if (authCode && authCode.clientId === client_id) {
+    if (authCode?.clientId === client_id) {
       // Generate access token
-      const accessToken = Math.random().toString(36).substring(2, 15);
-      tokens[accessToken] = {
-        userId: authCode.userId,
-        expires: new Date(Date.now() + 60000), // 1 minute
-        type: "access",
-      };
+      const accessToken = generateAccessToken(authCode.userId);
 
       // Generate refresh token if grant type includes refresh token
       const refreshToken = client.grants.includes("refresh_token")
@@ -131,7 +129,7 @@ app.post("/token", (req, res) => {
       if (refreshToken) {
         tokens[refreshToken] = {
           userId: authCode.userId,
-          expires: new Date(Date.now() + 3600000), // 1 hour
+          expires_at: new Date(Date.now() + refreshTokenExpiresInMs),
           type: "refresh",
         };
       }
@@ -143,14 +141,14 @@ app.post("/token", (req, res) => {
       const auth: AuthResponse = {
         access_token: {
           token: accessToken,
-          expires_in: tokens[accessToken].expires.getTime() - Date.now(),
+          expires_in: secondsToExpire(tokens[accessToken].expires_at),
         },
       };
 
       if (refreshToken) {
         auth.refresh_token = {
           token: refreshToken,
-          expires_in: tokens[refreshToken].expires.getTime() - Date.now(),
+          expires_in: secondsToExpire(tokens[refreshToken].expires_at),
         };
       }
 
@@ -163,6 +161,30 @@ app.post("/token", (req, res) => {
     } else {
       console.error("Invalid authorization code");
       res.status(400).send("Invalid authorization code");
+    }
+  } else if (grant_type === "refresh_token") {
+    const refreshToken = req.body.refresh_token;
+    console.log("refresh_token", refreshToken);
+    const tokenData = tokens[refreshToken];
+    if (tokenData?.type === "refresh" && tokenData.expires_at > new Date()) {
+      // Generate new access token
+      const accessToken = generateAccessToken(tokenData.userId);
+
+      // Respond with access token
+      const auth: AuthResponse = {
+        access_token: {
+          token: accessToken,
+          expires_in: secondsToExpire(tokens[accessToken].expires_at),
+        },
+      };
+
+      console.log(
+        `Exchanging refresh_token ${refreshToken} for access_token ${accessToken}`
+      );
+      res.json(auth);
+    } else {
+      console.error("Invalid refresh token");
+      res.status(400).send("Invalid refresh token");
     }
   } else {
     console.error("Unsupported grant type");
@@ -183,6 +205,14 @@ app.get("/me", (req, res) => {
 
   const token = authHeader.split(" ")[1];
   const tokenData = tokens[token];
+
+  if (!tokenData || tokenData.expires_at < new Date()) {
+    console.error("Token expired");
+    delete tokens[token];
+    res.status(401).send("Token expired");
+    return;
+  }
+
   const user = users.find((u) => u.id === tokenData.userId);
 
   if (tokenData && user) {
@@ -198,23 +228,34 @@ app.post("/introspect", (req, res) => {
   console.log("/introspect", req.body);
 
   const tokenData = tokens[token];
-  if (tokenData) {
-    if (tokenData.expires < new Date()) {
-      console.error("Token expired");
-      delete tokens[token];
-      res.status(401).send("Token expired");
-    } else {
-      const expiresIn = Math.round(
-        (tokenData.expires.getTime() - Date.now()) / 1000
-      );
-      console.log(`Token is valid for ${expiresIn} more seconds`);
-      res.status(200).send();
-    }
-  } else {
+
+  if (!tokenData || tokenData.expires_at < new Date()) {
+    console.error("Invalid access token");
+    delete tokens[token];
     res.status(401).send("Invalid access token");
+    return;
   }
+
+  const expiresIn = Math.round(
+    (tokenData.expires_at.getTime() - Date.now()) / 1000
+  );
+  console.log(`Token is valid for ${expiresIn} more seconds`);
+  res.status(200).send();
 });
 
 app.listen(port, () => {
   console.log(`OAuth2 Authorization Server running on port ${port}`);
 });
+
+const generateAccessToken = (userId: number) => {
+  const accessToken = Math.random().toString(36).substring(2, 15);
+  tokens[accessToken] = {
+    userId,
+    expires_at: new Date(Date.now() + accessTokenExpiresInMs), // 1 minute
+    type: "access",
+  };
+  return accessToken;
+};
+
+const secondsToExpire = (expires_at: Date) =>
+  (expires_at.getTime() - Date.now()) / 1000;

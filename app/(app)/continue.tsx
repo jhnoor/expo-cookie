@@ -6,6 +6,7 @@
 import { Text } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import {
+  AUTH_SERVER,
   BASE_URL,
   IS_WEB,
   NATIVE_CLIENT_ID,
@@ -15,13 +16,13 @@ import { useRouter } from "expo-router";
 import { AuthResponse } from "@/servers/models";
 import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
+import apiClient from "@/lib/api-client";
 
-const authServer = "http://localhost:4000";
 const redirectUri = IS_WEB
   ? `${BASE_URL}/bff/continue`
   : "expocookie://continue";
 const clientId = IS_WEB ? WEB_CLIENT_ID : NATIVE_CLIENT_ID;
-const authLoginPage = `${authServer}/login?redirect_uri=${redirectUri}&client_id=${clientId}`;
+const authLoginPage = `${AUTH_SERVER}/login?redirect_uri=${redirectUri}&client_id=${clientId}`;
 
 export default function Continue() {
   const router = useRouter();
@@ -49,27 +50,37 @@ export default function Continue() {
           }
 
           // exchange the code for an access token
-          const response = await fetch(`${authServer}/token`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              code,
-              grant_type: "authorization_code",
-              client_id: clientId,
-            }),
-          });
+          try {
+            const response = await apiClient.post<AuthResponse>(
+              `${AUTH_SERVER}/token`,
+              {
+                code,
+                grant_type: "authorization_code",
+                client_id: clientId,
+              }
+            );
 
-          if (!response.ok) {
-            console.error("Failed to get token: " + response.statusText);
+            console.log(
+              "Successfully exchanged code for tokens",
+              response.data
+            );
+            SecureStore.setItemAsync(
+              "access_token",
+              response.data.access_token.token
+            );
+            SecureStore.setItemAsync(
+              "refresh_token",
+              response.data.refresh_token!.token
+            );
+            // set a datetime for when the token expires
+            SecureStore.setItemAsync(
+              "expires_at",
+              (Date.now() + response.data.access_token.expires_in).toString()
+            );
+          } catch (error) {
+            console.error("Failed to exchange code for token: " + error);
             return;
           }
-
-          const auth: AuthResponse = await response.json();
-
-          console.log("Successfully exchanged code for tokens", auth);
-          SecureStore.setItemAsync("auth", JSON.stringify(auth));
 
           // redirect to /
           if (router.canGoBack()) {

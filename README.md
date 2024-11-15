@@ -45,5 +45,5 @@ and this is the flow for a native client:
 
 ## TODO
 
-- [ ] SecureStore example for app
-- [ ] Long-lived refresh token example for app
+- [x] SecureStore example for app
+- [x] Long-lived refresh token example for app
