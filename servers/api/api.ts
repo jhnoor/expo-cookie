@@ -6,6 +6,11 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
+app.use((req, _, next) => {
+  console.log(`${req.method} ${req.path} auth: ${req.headers.authorization}`);
+  next();
+});
+
 const users = [
   { id: 1, name: "Alice" },
   { id: 2, name: "Bob" },
@@ -14,7 +19,6 @@ const users = [
 
 app.get("/api/users", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("GET /api/users", token);
 
   if (token && (await isTokenValid(token))) {
     res.status(200).send(users);
@@ -26,7 +30,6 @@ app.get("/api/users", async (req: Request, res: Response) => {
 
 app.post("/api/users", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("POST /api/users", token);
 
   if (token && (await isTokenValid(token))) {
     const user = { ...req.body, id: users.length + 1 };
@@ -40,7 +43,6 @@ app.post("/api/users", async (req: Request, res: Response) => {
 
 app.delete("/api/users/:id", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("DELETE /api/users/:id", token);
 
   if (token && (await isTokenValid(token))) {
     const id = parseInt(req.params.id);
@@ -60,7 +62,6 @@ app.delete("/api/users/:id", async (req: Request, res: Response) => {
 
 app.put("/api/users/:id", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("PUT /api/users/:id", token);
 
   if (token && (await isTokenValid(token))) {
     const id = parseInt(req.params.id);
@@ -81,7 +82,6 @@ app.put("/api/users/:id", async (req: Request, res: Response) => {
 
 app.get("/api/me", async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log("GET /api/me", token);
 
   if (!token) {
     res.status(401).send({ error: "Unauthorized" });
