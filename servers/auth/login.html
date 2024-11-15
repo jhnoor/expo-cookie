@@ -92,11 +92,17 @@
       <input type="hidden" name="redirect_uri" id="redirect_uri" />
       <div class="form-group">
         <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required />
+        <input type="text" name="username" id="username" value="foo" required />
       </div>
       <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required />
+        <input
+          type="password"
+          name="password"
+          id="password"
+          value="bar"
+          required
+        />
       </div>
       <button type="submit">Login</button>
     </form>

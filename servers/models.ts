@@ -7,7 +7,7 @@ export type User = {
 export type Client = {
   clientId: string;
   redirectUris: string[];
-  grants: string[];
+  grants: ("authorization_code" | "refresh_token")[];
 };
 
 export type AuthorizationCode = {

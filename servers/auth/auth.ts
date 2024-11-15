@@ -2,7 +2,13 @@ import express from "express";
 import bodyParser from "body-parser";
 import querystring from "querystring";
 import path from "path";
-import { AuthorizationCode, AuthResponse, Token } from "../models";
+import {
+  AuthorizationCode,
+  AuthResponse,
+  Client,
+  Token,
+  User,
+} from "../models";
 
 const app = express();
 const port = 4000;
@@ -14,13 +20,13 @@ const accessTokenExpiresInMs = 60 * 1000; // 1 minute
 const refreshTokenExpiresInMs = 60 * 10 * 1000; // 10 minutes
 
 // This is a simple example, in a real app you would store users and clients in a database
-const users = [{ id: 1, username: "foo", password: "bar" }];
-const clients = [
+const users: User[] = [{ id: 1, username: "foo", password: "bar" }];
+const clients: Client[] = [
   {
     // Web client. Note that we redirect to the server-side BFF, in order to securely exchange the code for a token and set a cookie
     clientId: "myWebClient",
     redirectUris: ["http://localhost:8081/bff/continue"],
-    grants: ["authorization_code"],
+    grants: ["authorization_code", "refresh_token"],
   },
   {
     // Native client. The app can securely store the access and refresh tokens using the platform's secure storage, so we redirect to the app's own continue page
