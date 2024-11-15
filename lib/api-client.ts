@@ -1,46 +1,19 @@
 import axios from "axios";
-import {
-  API_URL,
-  AUTH_SERVER,
-  IS_WEB,
-  NATIVE_CLIENT_ID,
-  SECURE_STORE_KEYS,
-} from "./constants";
-import * as SecureStore from "expo-secure-store";
+import { API_URL, AUTH_SERVER, IS_WEB, NATIVE_CLIENT_ID } from "./constants";
 import { AuthResponse } from "@/servers/models";
+import { TokenStore } from "./token-store";
 
 const apiClient = axios.create({
   baseURL: API_URL,
 });
 
-const memory = {
-  accessToken: null as string | null,
-  refreshToken: null as string | null,
-  expiresAt: null as Date | null,
-};
-
-async function loadFromSecureStore(): Promise<void> {
-  if (!memory.refreshToken) {
-    memory.refreshToken = await SecureStore.getItemAsync(
-      SECURE_STORE_KEYS.REFRESH_TOKEN
-    );
-  }
-  if (!memory.accessToken) {
-    memory.accessToken = await SecureStore.getItemAsync(
-      SECURE_STORE_KEYS.ACCESS_TOKEN
-    );
-  }
-  if (!memory.expiresAt) {
-    const expiresAt = await SecureStore.getItemAsync(
-      SECURE_STORE_KEYS.EXPIRES_AT
-    );
-    if (expiresAt) {
-      memory.expiresAt = new Date(parseInt(expiresAt, 10));
-    }
-  }
-}
+const tokenStore = TokenStore.getInstance();
 
 async function refreshAccessToken(): Promise<void> {
+  if (!tokenStore.refreshToken) {
+    throw new Error("Refresh token is missing. Cannot refresh access token.");
+  }
+
   console.log("Access token expired. Refreshing...");
 
   try {
@@ -48,24 +21,15 @@ async function refreshAccessToken(): Promise<void> {
       `${AUTH_SERVER}/token`,
       {
         grant_type: "refresh_token",
-        refresh_token: memory.refreshToken,
+        refresh_token: tokenStore.refreshToken,
         client_id: NATIVE_CLIENT_ID,
       }
     );
 
     console.log("Successfully refreshed access token", response.data);
-    memory.accessToken = response.data.access_token.token;
-    memory.expiresAt = new Date(
-      response.data.access_token.expires_in * 1000 + Date.now()
-    );
-
-    await SecureStore.setItemAsync(
-      SECURE_STORE_KEYS.ACCESS_TOKEN,
-      memory.accessToken
-    );
-    await SecureStore.setItemAsync(
-      SECURE_STORE_KEYS.EXPIRES_AT,
-      memory.expiresAt.toString()
+    await tokenStore.setAccessToken(
+      response.data.access_token.token,
+      new Date(response.data.access_token.expires_in * 1000 + Date.now())
     );
   } catch (error) {
     console.error("Failed to refresh access token: " + error);
@@ -73,12 +37,12 @@ async function refreshAccessToken(): Promise<void> {
   }
 }
 
-function isTokenExpired(): boolean {
-  return memory.expiresAt !== null && memory.expiresAt < new Date();
-}
-
 function handleMissingTokens(): void {
-  if (!memory.accessToken || !memory.refreshToken || !memory.expiresAt) {
+  if (
+    !tokenStore.accessToken ||
+    !tokenStore.refreshToken ||
+    !tokenStore.expiresAt
+  ) {
     throw new Error(
       "Missing access token, refresh token, or expiresAt. User needs to log in."
     );
@@ -97,20 +61,19 @@ apiClient.interceptors.request.use(
     // tokens are locally stored only in app
     if (!IS_WEB) {
       try {
-        // load tokens from secure store into memory
-        await loadFromSecureStore();
+        await tokenStore.load();
         // check if tokens are missing
         handleMissingTokens();
 
         // refresh access token if it's expired
-        if (isTokenExpired()) {
+        if (tokenStore.isTokenExpired()) {
           await refreshAccessToken();
         }
       } catch (error) {
         console.warn(error);
         // TODO silently failing, take another look at this later
       }
-      config.headers.Authorization = `Bearer ${memory.accessToken}`;
+      config.headers.Authorization = `Bearer ${tokenStore.accessToken}`;
     }
 
     return config;

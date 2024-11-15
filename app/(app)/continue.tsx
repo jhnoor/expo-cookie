@@ -14,9 +14,11 @@ import {
 } from "@/lib/constants";
 import { useRouter } from "expo-router";
 import { AuthResponse } from "@/servers/models";
-import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
 import apiClient from "@/lib/api-client";
+import { TokenStore } from "@/lib/token-store";
+
+const tokenStore = TokenStore.getInstance();
 
 const redirectUri = IS_WEB
   ? `${BASE_URL}/bff/continue`
@@ -66,19 +68,15 @@ export default function Continue() {
               "Successfully exchanged code for tokens",
               response.data
             );
-            SecureStore.setItemAsync(
-              "access_token",
-              response.data.access_token.token
+
+            tokenStore.setAccessToken(
+              response.data.access_token.token,
+              new Date(
+                response.data.access_token.expires_in * 1000 + Date.now()
+              )
             );
-            SecureStore.setItemAsync(
-              "refresh_token",
-              response.data.refresh_token!.token
-            );
-            // set a datetime for when the token expires
-            SecureStore.setItemAsync(
-              "expires_at",
-              (Date.now() + response.data.access_token.expires_in).toString()
-            );
+
+            tokenStore.setRefreshToken(response.data.refresh_token!.token);
           } catch (error) {
             console.error("Failed to exchange code for token: " + error);
             return;
