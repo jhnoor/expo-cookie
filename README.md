@@ -47,3 +47,6 @@ and this is the flow for a native client:
 
 - [x] SecureStore example for app
 - [x] Long-lived refresh token example for app
+- [ ] Refresh token in BFF as well
+- [ ] Add some extra and deeper routes to illustrate uninterrupted flow for users when reauth (redirect back where you were)
+- [ ] Investigate whether pop-up modal for login is best UX for web

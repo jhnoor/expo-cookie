@@ -5,9 +5,6 @@
 
 import { AUTH_SERVER, WEB_CLIENT_ID } from "@/lib/constants";
 import { AuthResponse } from "@/servers/models";
-import * as WebBrowser from "expo-web-browser";
-
-WebBrowser.maybeCompleteAuthSession();
 
 // 2. Continue the auth flow
 // This is the endpoint that the auth server redirects to after the user logs in
