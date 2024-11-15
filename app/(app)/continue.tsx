@@ -38,7 +38,9 @@ export default function Continue() {
 
         if (result.type === "cancel") {
           console.error("User cancelled the login flow");
-          router.back();
+          if (router.canGoBack()) {
+            router.back();
+          }
         }
 
         if (result.type === "success" && result.url) {

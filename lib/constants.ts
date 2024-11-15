@@ -13,3 +13,9 @@ export const API_URL = IS_WEB ? WEB_API_URL : APP_API_URL;
 
 export const WEB_CLIENT_ID = "myWebClient";
 export const NATIVE_CLIENT_ID = "myNativeClient";
+
+export const SECURE_STORE_KEYS = {
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
+  EXPIRES_AT: "expires_at",
+};
